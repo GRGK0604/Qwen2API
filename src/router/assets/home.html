@@ -4,89 +4,300 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Qwen2 API</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap">
   <style>
-    /* 通用样式 */
+    :root {
+      --primary: #6366F1;
+      --primary-dark: #4F46E5;
+      --primary-light: #818CF8;
+      --success: #10B981;
+      --error: #F43F5E;
+      --bg-dark: #0F172A;
+      --bg-card: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --border-color: rgba(148, 163, 184, 0.1);
+    }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
+    @keyframes gradientAnimation {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #74ebd5, #acb6e5);
-      height: 100vh;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(125deg, rgba(99, 102, 241, 0.15), rgba(16, 185, 129, 0.15), rgba(244, 63, 94, 0.15));
+      background-size: 400% 400%;
+      animation: gradientAnimation 15s ease infinite;
+      z-index: -1;
     }
 
     .container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
       width: 100%;
-      height: 100%;
+      max-width: 540px;
+      animation: fadeIn 0.6s ease-out;
     }
 
-    .glass-board {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-      color: #333;
+    .card {
+      background: var(--bg-card);
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      padding: 40px;
+      overflow: hidden;
+      position: relative;
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+    }
+
+    .glow {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0) 70%);
+      top: -75px;
+      right: -75px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--primary-light), var(--primary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .base-url {
+      display: inline-block;
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary-light);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 8px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      backdrop-filter: blur(4px);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
       padding: 20px;
       text-align: center;
-      width: 300px;
-      max-width: 90%;
-      border: 1px solid rgba(200, 200, 200, 0.18);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
     }
 
-    .glass-board h1 {
-      font-size: 32px;
-      margin-bottom: 15px;
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+      border-color: rgba(99, 102, 241, 0.2);
     }
 
-    .glass-board p {
-      margin-bottom: 10px;
-      font-weight: bold;
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .success .stat-value {
+      background: linear-gradient(to right, #10B981, #34D399);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .error .stat-value {
+      background: linear-gradient(to right, #F43F5E, #FB7185);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .primary .stat-value {
+      background: linear-gradient(to right, #6366F1, #818CF8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .token-section {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .token-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .token-title {
       font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
     }
 
-    .valid-accounts {
-      color: green;
-      font-weight: bold;
-      margin-bottom: 10px;
+    .token-title::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--error);
+      border-radius: 50%;
+      margin-right: 8px;
     }
 
-    .invalid-accounts {
-      color: red;
-      font-weight: bold;
-      margin-bottom: 10px;
+    .token-badge {
+      margin-left: auto;
+      background: rgba(244, 63, 94, 0.1);
+      color: var(--error);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(244, 63, 94, 0.2);
     }
 
     #invalid-tokens {
       width: 100%;
-      background: rgba(255, 255, 255, 0.25);
-      color: #000;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-      font-size: 14px;
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-secondary);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 13px;
+      font-family: 'Consolas', monospace;
       resize: none;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    #invalid-tokens:focus {
+      outline: none;
+      border-color: rgba(244, 63, 94, 0.4);
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 30px 20px;
+      }
+      
+      .stats {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-top: 30px;
+      font-weight: 500;
+    }
+
+    .footer span {
+      color: var(--primary-light);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="glass-board">
-      <h1>服务运行中</h1>
-      <h3 style="margin-bottom: 10px;margin-top: 10px;">baseURL: <span>BASE_URL</span></h3>
-      <p>请求总数: <span>RequestNumber</span></p>
-      <p class="valid-accounts">有效账户数: <span>SuccessAccountNumber</span></p>
-      <p class="invalid-accounts">失效账户数: <span>ErrorAccountNumber</span></p>
-      <label for="invalid-tokens">失效Token列表:</label>
-      <textarea id="invalid-tokens" rows="6" readonly style="text-align: left;margin-top: 10px;">ErrorAccountTokens</textarea>
+    <div class="card">
+      <div class="glow"></div>
+      <div class="header">
+        <h1>Qwen2 API</h1>
+        <div class="base-url">BASE_URL</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card primary">
+          <div class="stat-value">RequestNumber</div>
+          <div class="stat-label">总请求</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-value">SuccessAccountNumber</div>
+          <div class="stat-label">有效账户</div>
+        </div>
+        <div class="stat-card error">
+          <div class="stat-value">ErrorAccountNumber</div>
+          <div class="stat-label">失效账户</div>
+        </div>
+      </div>
+
+      <div class="token-section">
+        <div class="token-header">
+          <div class="token-title">失效 Token</div>
+          <div class="token-badge">ErrorAccountNumber 个</div>
+        </div>
+        <textarea id="invalid-tokens" rows="5" readonly>ErrorAccountTokens</textarea>
+      </div>
+      
+      <div class="footer">
+        系统状态 · <span>在线运行中</span>
+      </div>
     </div>
   </div>
 </body>
